@@ -1,4 +1,6 @@
+from http import HTTPStatus
 from logging.handlers import RotatingFileHandler
+from xmlrpc.client import ResponseError
 import telegram
 import time
 import logging
@@ -35,7 +37,7 @@ handler = RotatingFileHandler(
     'my_logger.log',
     maxBytes=50000000,
     backupCount=5
-    )
+)
 logger.addHandler(handler)
 
 
@@ -54,21 +56,29 @@ def get_api_answer(current_timestamp):
         response = requests.get(ENDPOINT, headers=HEADERS, params=params)
     except Exception:
         logger.error('Сбой при отправке запроса')
+    if response.status_code != HTTPStatus.OK:
+        logger.error('Код ответа сервера не ОК')
     return response.json()
 
 
 def check_response(response):
-    try:
-        homework_list = response['homeworks']
-    except Exception:
-        if len(homework_list) == 0:
-            logger.error('Список пуст')
-    return homework_list
+    if not isinstance(response, dict):
+        logging.error('Ответ не является словарем')
+        raise TypeError('Ответ не в виде словаря')
+    if ('homeworks' or 'current_date') not in response:
+        logging.error('Ответ API некорректный')
+        raise ResponseError('В ответе отсутствуют домашние работы')
+    homeworks = response.get('homeworks')
+    if not isinstance(homeworks, list):
+        logging.error('Домашние работы не в виде списка')
+        raise TypeError('Домашние работы не в виде списка')
+    logging.info('Ответ API корректный')
+    return homeworks
 
 
 def parse_status(homework):
     homework_name = homework.get('homework_name')
-    homework_status = homework.get('homework_status')
+    homework_status = homework.get('status')
     verdict = HOMEWORK_STATUSES[homework_status]
     return f'Изменился статус проверки работы "{homework_name}". {verdict}'
 
@@ -90,15 +100,15 @@ def main():
     else:
         logger.info('Проверка токенов прошла успешно')
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
-    current_timestamp = int(time.time())
+    current_timestamp = 0
     while True:
         try:
             response = get_api_answer(current_timestamp)
             homework = check_response(response)
-            current_timestamp = current_timestamp
-            time.sleep(RETRY_TIME)
+            current_timestamp = response.get('current_date')
             message = parse_status(homework[0])
             send_message(bot, message)
+            time.sleep(RETRY_TIME)
 
         except Exception as error:
             message = f'Сбой в работе программы: {error}'
