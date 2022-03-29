@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from logging.handlers import RotatingFileHandler
+import sys
 from xmlrpc.client import ResponseError
 import telegram
 import time
@@ -27,8 +28,7 @@ HOMEWORK_STATUSES = {
 
 logging.basicConfig(
     level=logging.DEBUG,
-    filename='program.log',
-    filemode='a',
+    handlers=[logging.StreamHandler(stream=sys.stdout)],
     format='%(asctime)s, %(levelname)s, %(message)s, %(name)s'
 )
 logger = logging.getLogger(__name__)
