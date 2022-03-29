@@ -14,7 +14,7 @@ PRACTICUM_TOKEN = os.getenv('PRACTICUM_TOKEN')
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
 
-RETRY_TIME = 600
+RETRY_TIME = 5
 ENDPOINT = 'https://practicum.yandex.ru/api/user_api/homework_statuses/'
 HEADERS = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
 
@@ -58,6 +58,7 @@ def get_api_answer(current_timestamp):
         logger.error('Сбой при отправке запроса')
     if response.status_code != HTTPStatus.OK:
         logger.error('Код ответа сервера не ОК')
+        raise Exception('Код ответа сервера не ОК')
     return response.json()
 
 
@@ -100,22 +101,20 @@ def main():
     else:
         logger.info('Проверка токенов прошла успешно')
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
-    current_timestamp = 0
+    current_timestamp = int(time.time())
     while True:
         try:
             response = get_api_answer(current_timestamp)
             homework = check_response(response)
+            if homework:
+                message = parse_status(homework[0])
+                send_message(bot, message)
             current_timestamp = response.get('current_date')
-            message = parse_status(homework[0])
-            send_message(bot, message)
-            time.sleep(RETRY_TIME)
-
         except Exception as error:
             message = f'Сбой в работе программы: {error}'
             logger.error(message)
+        finally:
             time.sleep(RETRY_TIME)
-        else:
-            logger.error('Что то не работает')
 
 
 if __name__ == '__main__':
