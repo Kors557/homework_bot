@@ -42,7 +42,7 @@ logger.addHandler(handler)
 
 
 def send_message(bot, message):
-    '''Отправка сообщения'''
+    """Отправка сообщения"""
     try:
         bot.send_message(TELEGRAM_CHAT_ID, message)
         logger.info('Сообщение отправлено')
@@ -51,7 +51,7 @@ def send_message(bot, message):
 
 
 def get_api_answer(current_timestamp):
-    '''Отправка запроса к API'''
+    """Отправка запроса к API"""
     timestamp = current_timestamp or int(time.time())
     params = {'from_date': timestamp}
     try:
@@ -65,7 +65,7 @@ def get_api_answer(current_timestamp):
 
 
 def check_response(response):
-    '''Проверка ответа'''
+    """Проверка ответа"""
     if not isinstance(response, dict):
         logging.error('Ответ не является словарем')
         raise TypeError('Ответ не в виде словаря')
@@ -81,7 +81,7 @@ def check_response(response):
 
 
 def parse_status(homework):
-    '''Измениние статуса'''
+    """Измениние статуса"""
     homework_name = homework.get('homework_name')
     homework_status = homework.get('status')
     verdict = HOMEWORK_STATUSES[homework_status]
@@ -89,7 +89,7 @@ def parse_status(homework):
 
 
 def check_tokens():
-    '''Проверка токенов'''
+    """Проверка токенов"""
     if TELEGRAM_TOKEN is None:
         logger.critical('Отствует логин телеграмм')
         return False
