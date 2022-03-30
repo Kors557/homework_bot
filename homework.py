@@ -8,7 +8,7 @@ import logging
 import requests
 import os
 from dotenv import load_dotenv
-from excepions import WrongAPIResponseCodeError, SendMessageError
+from excepions import WrongAPIResponseCodeError, SendMessageError, TokinError
 
 load_dotenv()
 
@@ -97,19 +97,14 @@ def parse_status(homework):
 
 def check_tokens():
     """Проверка токенов."""
-    if TELEGRAM_TOKEN is None:
-        logger.critical('Отствует логин телеграмм')
-        return False
-    if PRACTICUM_TOKEN is None:
-        logger.critical('Отсутсвует логин Яндекса')
-        return False
-    return True
+    return all ([TELEGRAM_TOKEN, PRACTICUM_TOKEN, TELEGRAM_CHAT_ID])
 
 
 def main():
     """Основная логика работы бота."""
-    if check_tokens() is False:
-        return check_tokens()
+    if not check_tokens():
+        logging.critical('Отсутствует токен!')
+        raise TokinError('Отсутствует токен!')
     else:
         logger.info('Проверка токенов прошла успешно')
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
