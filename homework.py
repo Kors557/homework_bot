@@ -8,6 +8,7 @@ import logging
 import requests
 import os
 from dotenv import load_dotenv
+from excepions import WrongAPIResponseCodeError, SendMessageError
 
 load_dotenv()
 
@@ -46,8 +47,9 @@ def send_message(bot, message):
     try:
         bot.send_message(TELEGRAM_CHAT_ID, message)
         logger.info('Сообщение отправлено')
-    except Exception:
+    except Exception as error:
         logger.error('Сбой отправки сообщение')
+        raise SendMessageError(f'Ошибка при отправки сообщения: {error}')
 
 
 def get_api_answer(current_timestamp):
@@ -60,7 +62,12 @@ def get_api_answer(current_timestamp):
         logger.error('Сбой при отправке запроса')
     if response.status_code != HTTPStatus.OK:
         logger.error('Код ответа сервера не ОК')
-        raise Exception('Код ответа сервера не ОК')
+        raise WrongAPIResponseCodeError(
+            'Ответ сервера не является успешным:'
+            f' request params = {params};'
+            f' http_code = {response.status_code};'
+            f' reason = {response.reason}; content = {response.text}'
+        )
     return response.json()
 
 
