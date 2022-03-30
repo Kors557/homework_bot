@@ -97,7 +97,7 @@ def parse_status(homework):
 
 def check_tokens():
     """Проверка токенов."""
-    return all ([TELEGRAM_TOKEN, PRACTICUM_TOKEN, TELEGRAM_CHAT_ID])
+    return all([TELEGRAM_TOKEN, PRACTICUM_TOKEN, TELEGRAM_CHAT_ID])
 
 
 def main():
